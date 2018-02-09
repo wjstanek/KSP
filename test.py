@@ -1,26 +1,44 @@
-import krpc
-conn = krpc.connect("test")
+import krpc, time
 
+class MissionParameters(object):
+    def __init__(self,
+                 tgtOrbit = 200000,
+                 grav_turn_finish = 80000,
+                 force_roll = True,
+                 roll = 90,
+                 deploy_solar = False,
+                 max_q = 30000):
+        self.tgtOrbit = tgtOrbit
+        self.grav_turn_finish = grav_turn_finish
+        self.force_roll = force_roll
+        self.roll = roll
+        self.deploy_solar = deploy_solar
+        self.max_q = max_q
+
+# Initialize
 vessel = conn.space_center.active_vessel
+ap = vessel.auto_pilot
+ap.sas = False
+vessel.control.throttle = 0
+vessel.control.rcs = False
 
-control = vessel.control
-control.sas = False
-control.rcs = False
-control.lights = True
+listRCS = vessel.parts.rcs
+listParts = vessel.parts.all
+for part in listRCS:
+    part.enabled = True
 
-launch = True
-while launch:
-    ap = vessel.auto_pilot
-    ap.target_pitch = 90
-    ap.target_heading = 90
-    ap.target_roll = 90
-    ap.engage()
-    control.activate_next_stage()
+def main():
+    conn = krpc.connect("test")
+    launch_params = MissionParameters()
+    ascent(conn,launch_params)
 
+def ascent(conn, launch_params)
+    conn = conn
+    sc = conn.space_center
+    v = sc.active_vessel
 
-#ap.sas_mode = conn.space_center.SASMode.retrograde
-
-
-
-#for panels in vessel.parts.solar_panels:
-#sw   panels.deployed = True
+    v.auto_pilot.engage()
+    v.auto_pilot.target_heading = 90
+    if launch_params.force_roll:
+        v.auto_pilot.target_roll=launch_params.roll
+    v.control.throttle = 1.0
