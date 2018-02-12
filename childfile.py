@@ -2,21 +2,21 @@
 
 def main():
     from multiprocessing import Process, Pipe
-    from test import sendv, pos
+    from test import sendv, pos, sendalt
     import time
     import numpy as np
 
     start = pos()  # calls test.py pos() to get start position once
     # print('Start: ' +str(start))
     parent_conn, child_conn = Pipe()
-    p = Process(target=sendv, args=(child_conn,)).start()
-    pos = parent_conn.recv()
     # print('Current: ' +str(pos))
 
     i = True
     while i:
         p = Process(target=sendv, args=(child_conn,)).start()
         pos = parent_conn.recv()
+        a = Process(target=sendalt, args=(child_conn,)).start()
+        alt = parent_conn.recv()
         print('Start: ' + str(round(start[0], 1)) + ' ' + str(round(start[1], 1)))
         print('Curr:  ' + str(round(pos[0], 1)) + ' ' + str(round(pos[1], 1)))
         # haversine formula https://www.movable-type.co.uk/scripts/latlong.html
@@ -32,7 +32,11 @@ def main():
 
         # dist = round( ((pos[0]-start[0])**2 +(pos[1]-start[1])**2)**(.5)*60,3 )
         print('Dist:  ' + str(round(dist, 1)))
+        print('Alt: ' + str(round(alt,1)))
         time.sleep(1)
+        filename = 'logtest.dat'
+        with open(filename, 'a') as file_object:
+            file_object.write(str(round(dist,1)) + '\t' + str(round(alt,1)) + '\n')
     return(dist)
 
 

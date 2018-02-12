@@ -6,7 +6,7 @@ class MissionParameters(object):
                  tgtOrbit = 200000,
                  grav_turn_finish = 80000,
                  force_roll = True,
-                 roll = 90,
+                 roll = 0,
                  deploy_solar = False,
                  max_q = 30000):
         self.tgtOrbit = tgtOrbit
@@ -58,15 +58,19 @@ def launch(conn, v, launch_params):
 
 
     # Pitch Maneuver
-    while flight.surface_altitude < 1000:
+    while flight.surface_altitude < 500:
         time.sleep(0.2)
 
 def grav_turn(v, launch_params):
     print('Gravity Turn')
     i = True
+    tgtPitch = 90
     while i:
         autostage(v)
-        tgtPitch = max(10,90*(1-(v.orbit.apoapsis_altitude)/120000))
+        if tgtPitch == 30:
+            tgtPitch = max(5,90*(1-(v.orbit.apoapsis_altitude)/140000))
+        if tgtPitch > 30:
+            tgtPitch = max(30,90*(1-(v.orbit.apoapsis_altitude)/120000))
         v.auto_pilot.target_pitch = tgtPitch
         #print(round(v.auto_pilot.target_pitch,1))
         if v.orbit.apoapsis_altitude > launch_params.tgtOrbit:
@@ -93,6 +97,15 @@ def sendv(child_conn):
     pos.append(flight.latitude)
     pos.append(flight.longitude)
     child_conn.send(pos)
+    child_conn.close()
+
+def sendalt(child_conn):
+    conn = krpc.connect("test")
+    sc = conn.space_center
+    v = sc.active_vessel
+    flight = v.flight()
+    alt = flight.mean_altitude
+    child_conn.send(alt)
     child_conn.close()
 
 def autostage(v):
